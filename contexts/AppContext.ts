@@ -1,16 +1,15 @@
-
 import { createContext } from 'react';
-// Fix: Import Modules type.
 import type { User, Modules } from '../types';
 
-interface AppContextType {
-  user: User;
-  // Fix: Add modules to the context type.
-  modules: Modules;
-  navigateTo: (page: string) => void;
-  openModule: (moduleId: string) => void;
-  handleQuizFinish: (score: number, totalQuestions: number, pointsWon: number) => void;
-  handleGenericActivityFinish: (pointsWon: number, title: string, message: string) => void;
+export interface AppContextType {
+    user: User;
+    modules: Modules;
+    navigateTo: (page: string) => void;
+    openModule: (moduleId: string) => void;
+    handleQuizFinish: (correctAnswers: number, totalQuestions: number, points: number) => void;
+    handleGenericActivityFinish: (points: number, title: string, message: string) => void;
+    updateUser: (updatedUser: User) => void;
+    resetProgress: () => void;
 }
 
 export const AppContext = createContext<AppContextType | null>(null);

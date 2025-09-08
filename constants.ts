@@ -1,134 +1,170 @@
-import type { User, BadgeInfo, RankingUser, Modules } from './types';
+import type { User, BadgeInfo, Modules, RankingUser } from './types';
 
-export const CURRENT_USER: User = { 
-    id: 'user004', 
-    name: 'Alex', 
-    points: 3250, 
-    badges: ['b01', 'b02']
+export const CURRENT_USER: User = {
+    id: 'user1',
+    name: 'Àlex',
+    points: 1250,
+    badges: ['b01', 'b02'],
 };
 
 export const ALL_BADGES: BadgeInfo[] = [
-    { id: 'b01', name: 'Inici Ràpid', desc: 'Completa el teu primer mòdul.', icon: '🏆', color: 'teal' },
-    { id: 'b02', name: 'Gestor/a d\'Atenció', desc: 'Supera el mòdul sobre el teu perfil digital.', icon: '🎯', color: 'amber' },
-    { id: 'b03', name: 'Guardià/na Digital', desc: 'Completa el repte de desconnexió intel·ligent.', icon: '🛡️', color: 'indigo' },
-    { id: 'b04', name: 'Heroi/na de la Prevenció', desc: 'Completa la història interactiva "El Camí de la Consciència".', icon: '🦸', color: 'rose' },
-    { id: 'b05', name: 'Caçamites', desc: 'Aconsegueix el 100% en el test de mites sobre el joc.', icon: '💡', color: 'blue' },
-    { id: 'b06', name: 'Compartidor/a d\'Experiències', desc: 'Participa en el diari de reflexió "El teu consell d\'or".', icon: '✍️', color: 'orange' }
+    { id: 'b01', name: 'Iniciador Digital', desc: 'Completa el primer mòdul', icon: '🌱', color: 'teal' },
+    { id: 'b02', name: 'Guardià del Temps', desc: 'Aprèn a gestionar el temps de pantalla', icon: '⏳', color: 'sky' },
+    { id: 'b03', name: 'Mestre del Joc', desc: 'Supera els reptes de ludopatia', icon: '🎮', color: 'indigo' },
+    { id: 'b04', name: 'Comunicador Conscient', desc: 'Domina la comunicació a les xarxes', icon: '💬', color: 'rose' },
+    { id: 'b05', name: 'Expert en Privacitat', desc: 'Protegeix les teves dades personals', icon: '🛡️', color: 'amber' },
+    { id: 'b06', name: 'Campió del Benestar', desc: 'Completa tota la formació', icon: '🏆', color: 'lime' },
 ];
 
 export const RANKING_DATA: RankingUser[] = [
-    { id: 'user001', name: 'Usuari_Alfa', points: 4100 },
-    { id: 'user002', name: 'Usuari_Beta', points: 3850 },
-    { id: 'user003', name: 'Usuari_Gamma', points: 3400 },
-    { id: 'user004', name: 'Alex', points: 3250 },
-    { id: 'user005', name: 'Usuari_Delta', points: 2900 },
-    { id: 'user006', name: 'Usuari_Epsilon', points: 2500 }
+    { id: 'user2', name: 'Laura G.', points: 2100 },
+    { id: 'user3', name: 'Carles P.', points: 1850 },
+    { id: 'user1', name: 'Àlex', points: 1250 },
+    { id: 'user4', name: 'Marta S.', points: 900 },
+    { id: 'user5', name: 'Joan R.', points: 550 },
 ];
 
 export const MODULES_DATA: Modules = {
-    // Eix 1: Ús saludable del mòbil
-    'm01p01': {
-        title: '1. El teu perfil digital equilibrat',
-        subtitle: 'Pren decisions per equilibrar feina i benestar.',
+    'm01-01': {
+        title: '1. El teu mòbil i tu',
+        subtitle: 'Comprendre la teva relació amb el dispositiu i els seus efectes.',
+        activity: {
+            type: 'quiz',
+            pointsPerCorrect: 50,
+            questions: [
+                { q: 'Quin és el principal neurotransmissor associat a les recompenses de les xarxes socials?', options: ['Serotonina', 'Dopamina', 'Adrenalina'], answer: 1 },
+                { q: 'L\'ús excessiu del mòbil abans de dormir pot afectar negativament...', options: ['La gana', 'La qualitat del son', 'L\'equilibri'], answer: 1 },
+            ],
+        },
         status: 'completed',
         progress: 100,
-        points: 50,
-        activity: {
-            type: 'quiz',
-            pointsPerCorrect: 25,
-            questions: [
-                { q: "Estàs atenent un client i reps una notificació personal al mòbil. Què fas?", options: ["Miro ràpidament la notificació.", "Ignoro el mòbil i em centro en el client.", "Demano un moment al client per revisar el mòbil."], answer: 1 },
-                { q: "Un company et demana ajuda mentre navegues per xarxes socials en un moment de poca feina. La teva reacció és:", options: ["Li dic que esperi un moment.", "Deixo el mòbil a l'instant i l'ajudo.", "L'ajudo mentre continuo mirant el mòbil de reüll."], answer: 1 },
-            ]
-        }
+        points: 100
     },
-    'm01p02': {
-        title: '2. Detector de senyals d\'alerta',
-        subtitle: 'Identifica hàbits digitals de risc.',
-        status: 'inprogress',
-        progress: 50,
+    'm01-02': {
+        title: '2. Notificacions: amigues o enemigues?',
+        subtitle: 'Aprèn a gestionar les alertes per recuperar el teu focus i la teva pau.',
         activity: {
             type: 'drag-drop-scenario',
-            prompt: 'Classifica aquests comportaments segons si són un senyal d\'alerta o un ús normal del mòbil.',
+            prompt: 'Classifica aquests comportaments segons si són una bona pràctica o una interrupció constant.',
             points: 100,
             items: [
-                {id: 'i1', content: 'Consultar el mòbil cada 5 minuts.', type: 'risk'},
-                {id: 'i2', content: 'Silenciar el mòbil durant reunions.', type: 'healthy'},
-                {id: 'i3', content: 'Sentir ansietat si no tens el mòbil a prop.', type: 'risk'},
-                {id: 'i4', content: 'Utilitzar el mòbil per desconnectar a l\'hora de dinar.', type: 'healthy'},
-                {id: 'i5', content: 'Deixar de fer activitats que t\'agradaven per estar amb el mòbil.', type: 'risk'},
+                { id: 'item1', content: 'Revisar el mòbil cada vegada que vibra', type: 'risk' },
+                { id: 'item2', content: 'Consultar el correu només 3 cops al dia', type: 'healthy' },
+                { id: 'item3', content: 'Activar el mode "No molestar" mentre treballes', type: 'healthy' },
+                { id: 'item4', content: 'Tenir totes les notificacions de xarxes socials activades', type: 'risk' },
             ],
             dropZones: [
-                {id: 'dz1', title: 'Ús Normal', accepts: 'healthy'},
-                {id: 'dz2', title: 'Senyal d\'Alerta', accepts: 'risk'},
-            ]
-        }
-    },
-    'm01p03': {
-        title: '3. Repte: Desconnexió intel·ligent',
-        subtitle: 'Reflexiona sobre un dia amb menys notificacions.',
+                { id: 'zone1', title: 'Mala Pràctica (Interrupció)', accepts: 'risk' },
+                { id: 'zone2', title: 'Bona Pràctica (Gestió)', accepts: 'healthy' },
+            ],
+        },
         status: 'inprogress',
-        progress: 0,
+        progress: 50,
+    },
+    'm01-03': {
+        title: '3. Temps de pantalla conscient',
+        subtitle: 'Estratègies per utilitzar el teu temps digital de manera intencionada.',
         activity: {
             type: 'reflection-journal',
-            prompt: 'Després de provar de desactivar les notificacions no essencials durant un dia, reflexiona: Quins beneficis has notat? Quines han estat les principals dificultats que has trobat?',
+            prompt: 'Escriu sobre una situació en què vas sentir que perdies el temps amb el mòbil. Què podries haver fet diferent?',
             points: 150,
-        }
-    },
-    // Eix 2: Ludopatia i joc problemàtic
-    'm02p01': {
-        title: '1. El Camí de la Consciència',
-        subtitle: 'Una història interactiva sobre la prevenció.',
-        status: 'locked',
+        },
+        status: 'inprogress',
         progress: 0,
+    },
+    'm02-01': {
+        title: '1. Què és la ludopatia?',
+        subtitle: 'Introducció als riscos d\'addicció als jocs d\'atzar i videojocs.',
         activity: {
             type: 'quiz',
             pointsPerCorrect: 50,
             questions: [
-                { q: "Un client habitual comença a demanar petits préstecs i sembla més ansiós. Com a professional, què fas?", options: ["No m'hi fico, és la seva vida privada.", "Li pregunto discretament si tot va bé i li recordo on trobar informació sobre joc responsable.", "Li comento la situació a altres clients."], answer: 1 },
-                { q: "Un company de feina et confessa que ha perdut diners que no es podia permetre. Quina és la teva millor resposta?", options: ["Dir-li que no es preocupi, que ja els recuperarà.", "Jutjar la seva decisió i dir-li que ha estat imprudent.", "Escoltar-lo sense jutjar, mostrar-li suport i suggerir-li parlar amb un professional."], answer: 2 },
-            ]
-        }
-    },
-    'm02p02': {
-        title: '2. Mites i realitats sobre el joc',
-        subtitle: 'Desmentint creences populars.',
-        status: 'locked',
+                { q: 'Quin d\'aquests NO és un senyal d\'alerta de possible ludopatia?', options: ['Mentir sobre el temps o diners gastats jugant', 'Jugar només amb amics un cop al mes', 'Demanar diners per continuar jugant'], answer: 1 },
+                { q: 'La "fal·làcia del jugador" és la creença errònia que...', options: ['Els jocs d\'atzar són una forma segura d\'invertir', 'Si un resultat no ha sortit en molt de temps, és més probable que surti aviat', 'Només els experts poden guanyar a llarg termini'], answer: 1 },
+            ],
+        },
+        status: 'inprogress',
         progress: 0,
+    },
+    'm02-02': {
+        title: '2. Mecanismes enganyosos',
+        subtitle: 'Descobreix com les "loot boxes" i les microtransaccions fomenten l\'addicció.',
         activity: {
-            type: 'quiz',
-            pointsPerCorrect: 50,
-            questions: [
-                { q: "Mite o Realitat: Una persona ludòpata pot deixar de jugar quan vulgui, només li cal força de voluntat.", options: ["Mite", "Realitat"], answer: 0 },
-                { q: "Mite o Realitat: El joc és només un problema si es perden diners.", options: ["Mite", "Realitat"], answer: 0 },
-                { q: "Mite o Realitat: Si portes molt de temps perdent, estàs 'a punt de guanyar'.", options: ["Mite", "Realitat"], answer: 0 },
-            ]
-        }
-    },
-    // Eix 3: Altres addiccions socials
-    'm03p01': {
-        title: '1. Simulació: Compres i xarxes socials',
-        subtitle: 'Decisions ràpides en situacions quotidianes.',
-        status: 'locked',
+             type: 'drag-drop-scenario',
+            prompt: 'Classifica aquests mecanismes de jocs segons el seu risc addictiu.',
+            points: 100,
+            items: [
+                { id: 'item1', content: '"Loot boxes" (caixes de botí aleatòries)', type: 'risk' },
+                { id: 'item2', content: 'Comprar un aspecte cosmètic directament', type: 'healthy' },
+                { id: 'item3', content: 'Recompenses per connexió diària', type: 'risk' },
+                { id: 'item4', content: 'Expansions de contingut de pagament únic', type: 'healthy' },
+            ],
+            dropZones: [
+                { id: 'zone1', title: 'Alt Risc Addictiu', accepts: 'risk' },
+                { id: 'zone2', title: 'Baix Risc Addictiu', accepts: 'healthy' },
+            ],
+        },
+        status: 'inprogress',
         progress: 0,
+    },
+    'm02-03': {
+        title: '3. Joc responsable',
+        subtitle: 'Eines i consells per mantenir el joc com una activitat d\'oci segura.',
+        activity: {
+            type: 'reflection-journal',
+            prompt: 'Escriu tres regles personals que podries establir per assegurar-te que el joc sigui sempre una activitat segura i controlada per a tu.',
+            points: 150,
+        },
+        status: 'inprogress',
+        progress: 0,
+    },
+    'm03-01': {
+        title: '1. La bombolla social',
+        subtitle: 'Com els algorismes configuren la teva percepció de la realitat.',
         activity: {
             type: 'quiz',
             pointsPerCorrect: 75,
             questions: [
-                { q: "Has tingut un mal dia a la feina. Quina opció és més saludable per gestionar l'estrès?", options: ["Comprar online per animar-te.", "Passar hores a les xarxes socials per evadir-te.", "Parlar amb un amic o fer una passejada."], answer: 2 },
-                { q: "Veus una oferta 'imperdible' a internet d'alguna cosa que no necessites. Què fas?", options: ["La compro immediatament abans que s'acabi.", "M'ho penso durant 24 hores abans de decidir.", "Miro si puc demanar un crèdit ràpid per aprofitar-la."], answer: 1 },
-            ]
-        }
-    },
-    'm03p02': {
-        title: '2. El teu consell d\'or',
-        subtitle: 'Comparteix la teva experiència de forma anònima.',
-        status: 'locked',
+                { q: 'Un "biaix de confirmació" en xarxes socials significa que l\'algorisme tendeix a mostrar-te...', options: ['Contingut que desafia les teves idees', 'Contingut variat de tot el món', 'Contingut que reforça les teves creences existents'], answer: 2 },
+                { q: 'Quina és la millor estratègia per sortir de la teva "bombolla de filtre"?', options: ['Seguir només gent que pensa exactament com tu', 'Buscar activament i seguir fonts amb perspectives diferents', 'No interactuar mai amb el contingut'], answer: 1 },
+            ],
+        },
+        status: 'inprogress',
         progress: 0,
+    },
+    'm03-02': {
+        title: '2. Assetjament digital',
+        subtitle: 'Identificar, prevenir i actuar davant del ciberassetjament.',
         activity: {
-            type: 'reflection-journal',
-            prompt: 'Comparteix un consell o una experiència personal breu (de forma totalment anònima) sobre com gestiones una distracció digital (xarxes socials, compres, videojocs...). La teva aportació pot ajudar altres companys.',
-            points: 150,
-        }
-    }
+            type: 'drag-drop-scenario',
+            prompt: 'Classifica els següents comentaris en línia.',
+            points: 100,
+            items: [
+                { id: 'item1', content: '"No estic d\'acord amb la teva opinió, però respecto el teu punt de vista."', type: 'healthy' },
+                { id: 'item2', content: '"Tothom sap que ets un fracassat, deixa de publicar bestieses."', type: 'risk' },
+                { id: 'item3', content: '"Gran article! M\'ha fet pensar molt."', type: 'healthy' },
+                { id: 'item4', content: '"He vist on vius, vés amb compte."', type: 'risk' },
+            ],
+            dropZones: [
+                { id: 'zone1', title: 'Ciberassetjament / Discurs d\'odi', accepts: 'risk' },
+                { id: 'zone2', title: 'Interacció Respectuosa', accepts: 'healthy' },
+            ],
+        },
+        status: 'inprogress',
+        progress: 0,
+    },
+    'm03-03': {
+        title: '3. Desinformació i "fake news"',
+        subtitle: 'Desenvolupa el teu sentit crític per navegar en un mar d\'informació.',
+        activity: {
+            type: 'quiz',
+            pointsPerCorrect: 75,
+            questions: [
+                { q: 'Quin d\'aquests titulars és un senyal d\'alerta de possible "fake news"?', options: ['"Estudi científic troba una correlació entre X i Y"', '"ÚLTIMA HORA: EL SECRET QUE ELS METGES NO VOLEN QUE SÀPIGUES!"', '"El govern aprova la nova llei d\'educació"'], answer: 1 },
+                { q: 'Abans de compartir una notícia impactant, què és el més important que has de fer?', options: ['Compartir-la immediatament per informar els altres', 'Verificar la informació en fonts fiables i reconegudes', 'Preguntar als teus amics si sembla real'], answer: 1 },
+            ],
+        },
+        status: 'inprogress',
+        progress: 0,
+    },
 };

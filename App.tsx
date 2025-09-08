@@ -1,4 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { AppContext, AppContextType } from './contexts/AppContext';
+import { CURRENT_USER, MODULES_DATA } from './constants';
+import type { User, Modules, ModalContent } from './types';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
@@ -8,105 +11,104 @@ import ProgressPage from './pages/ProgressPage';
 import ProfilePage from './pages/ProfilePage';
 import ModuleViewPage from './pages/ModuleViewPage';
 import QuizModal from './components/QuizModal';
-import { AppContext } from './contexts/AppContext';
-// Fix: Import CURRENT_USER to resolve reference error.
-import { MODULES_DATA, CURRENT_USER } from './constants';
-import type { User, ModalContent, Modules } from './types';
-
-// A simple deep copy function for state updates
-const deepCopy = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
 const App = () => {
-    const [page, setPage] = useState('inici');
+    const [currentPage, setCurrentPage] = useState('inici');
     const [currentModuleId, setCurrentModuleId] = useState<string | null>(null);
     const [user, setUser] = useState<User>(CURRENT_USER);
-    const [modules, setModules] = useState<Modules>(deepCopy(MODULES_DATA));
+    const [modules, setModules] = useState<Modules>(MODULES_DATA);
     const [modalContent, setModalContent] = useState<ModalContent | null>(null);
 
-    const navigateTo = useCallback((newPage: string) => {
-        setPage(newPage);
-        window.location.hash = newPage;
-    }, []);
+    const navigateTo = (page: string) => {
+        setCurrentPage(page);
+        setCurrentModuleId(null);
+        window.scrollTo(0, 0);
+    };
 
-    const openModule = useCallback((moduleId: string) => {
+    const openModule = (moduleId: string) => {
         setCurrentModuleId(moduleId);
-        navigateTo('module-view');
-    }, [navigateTo]);
+        setCurrentPage('module-view');
+        window.scrollTo(0, 0);
+    };
     
-    const handleActivityCompletion = useCallback((moduleId: string, pointsWon: number) => {
-        setUser(prevUser => ({...prevUser, points: prevUser.points + pointsWon}));
+    const handleActivityCompletion = (moduleId: string, points: number) => {
+        setUser(prevUser => ({
+            ...prevUser,
+            points: prevUser.points + points,
+        }));
         setModules(prevModules => {
-            const newModules = deepCopy(prevModules);
+            const newModules = { ...prevModules };
             if (newModules[moduleId]) {
-                newModules[moduleId].status = 'completed';
-                newModules[moduleId].progress = 100;
-                newModules[moduleId].points = pointsWon;
+                newModules[moduleId] = {
+                    ...newModules[moduleId],
+                    status: 'completed',
+                    progress: 100,
+                    points: points,
+                };
             }
             return newModules;
         });
-    }, []);
+    }
 
-    const handleQuizFinish = useCallback((score: number, totalQuestions: number, pointsWon: number) => {
-        const success = score / totalQuestions > 0.7;
-        setModalContent({
-            title: success ? 'Excel·lent!' : 'Bon intent!',
-            scoreText: `Has respost correctament ${score} de ${totalQuestions} preguntes.`,
-            pointsText: `+${pointsWon} punts!`,
-            icon: success ? '🎉' : '👍',
-            iconBgColor: success ? 'bg-teal-100' : 'bg-amber-100',
-            iconTextColor: success ? 'text-teal-600' : 'text-amber-600'
-        });
-        if (currentModuleId && success) {
-            handleActivityCompletion(currentModuleId, pointsWon);
+    const handleQuizFinish = (correctAnswers: number, totalQuestions: number, points: number) => {
+        if (currentModuleId) {
+            handleActivityCompletion(currentModuleId, points);
         }
-    }, [currentModuleId, handleActivityCompletion]);
-
-    const handleGenericActivityFinish = useCallback((pointsWon: number, title: string, message: string) => {
         setModalContent({
-            title: title,
-            scoreText: message,
-            pointsText: `+${pointsWon} punts!`,
-            icon: '✅',
+            title: correctAnswers === totalQuestions ? 'Excel·lent!' : 'Bon esforç!',
+            scoreText: `Has encertat ${correctAnswers} de ${totalQuestions} preguntes.`,
+            pointsText: `+${points} punts`,
+            icon: '🎉',
             iconBgColor: 'bg-teal-100',
             iconTextColor: 'text-teal-600',
         });
+    };
+    
+    const handleGenericActivityFinish = (points: number, title: string, message: string) => {
         if (currentModuleId) {
-            handleActivityCompletion(currentModuleId, pointsWon);
+            handleActivityCompletion(currentModuleId, points);
         }
-    }, [currentModuleId, handleActivityCompletion]);
+         setModalContent({
+            title: title,
+            scoreText: message,
+            pointsText: `+${points} punts`,
+            icon: '👍',
+            iconBgColor: 'bg-sky-100',
+            iconTextColor: 'text-sky-600',
+        });
+    };
 
-    const closeQuizModal = useCallback(() => {
-        setModalContent(null);
-        navigateTo('moduls');
-    }, [navigateTo]);
+    const updateUser = (updatedUser: User) => {
+        setUser(updatedUser);
+    };
 
-    useEffect(() => {
-        const handleHashChange = () => {
-            const hash = window.location.hash.replace('#', '');
-            if (hash && ['inici', 'moduls', 'progres', 'perfil', 'module-view'].includes(hash)) {
-                setPage(hash);
-            } else if (!hash) {
-                setPage('inici');
-            }
-        };
+    const resetProgress = () => {
+        setUser(currentUser => ({
+            ...currentUser,
+            points: 0,
+            badges: [],
+        }));
+        setModules(MODULES_DATA);
+        navigateTo('inici');
+    };
 
-        window.addEventListener('hashchange', handleHashChange);
-        handleHashChange(); // Initial load
-
-        return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
-
-    const contextValue = useMemo(() => ({
+    const appContextValue: AppContextType = useMemo(() => ({
         user,
         modules,
         navigateTo,
         openModule,
         handleQuizFinish,
         handleGenericActivityFinish,
-    }), [user, modules, navigateTo, openModule, handleQuizFinish, handleGenericActivityFinish]);
+        updateUser,
+        resetProgress,
+    }), [user, modules]);
 
     const renderPage = () => {
-        switch (page) {
+        if (currentModuleId && currentPage === 'module-view') {
+            const moduleData = modules[currentModuleId];
+            return <ModuleViewPage moduleId={currentModuleId} moduleData={moduleData} />;
+        }
+        switch (currentPage) {
             case 'inici':
                 return <HomePage />;
             case 'moduls':
@@ -115,31 +117,29 @@ const App = () => {
                 return <ProgressPage />;
             case 'perfil':
                 return <ProfilePage />;
-            case 'module-view':
-                return currentModuleId && modules[currentModuleId] ? (
-                    <ModuleViewPage 
-                        moduleId={currentModuleId} 
-                        moduleData={modules[currentModuleId]} 
-                    />
-                ) : <ModulesPage />;
             default:
                 return <HomePage />;
         }
     };
+    
+    const closeModal = () => {
+        setModalContent(null);
+        navigateTo('moduls');
+    };
 
     return (
-        <AppContext.Provider value={contextValue}>
-            <div className="flex h-screen overflow-hidden">
-                <Sidebar currentPage={page} />
-                <main className="flex-1 flex flex-col overflow-hidden">
+        <AppContext.Provider value={appContextValue}>
+            <div className="flex h-screen bg-slate-50 font-sans">
+                <Sidebar currentPage={currentPage} />
+                <div className="flex flex-col flex-1 overflow-hidden">
                     <Header />
-                    <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                    <main className="flex-1 overflow-y-auto p-6 md:p-8">
                         {renderPage()}
-                    </div>
-                    <BottomNav currentPage={page} />
-                </main>
+                    </main>
+                    <BottomNav currentPage={currentPage} />
+                </div>
+                 {modalContent && <QuizModal content={modalContent} onClose={closeModal} />}
             </div>
-            {modalContent && <QuizModal content={modalContent} onClose={closeQuizModal} />}
         </AppContext.Provider>
     );
 };
