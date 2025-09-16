@@ -53,6 +53,7 @@ export interface ModuleData {
   title: string;
   subtitle: string;
   content?: string[];
+  videoUrl?: string;
   activity: ActivityData | null;
   status: 'completed' | 'inprogress' | 'locked';
   progress: number;

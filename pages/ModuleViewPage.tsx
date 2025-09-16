@@ -55,9 +55,14 @@ const ModuleViewPage = ({ moduleData }: ModuleViewPageProps) => {
                 </div>
             )}
             
-            <div className="aspect-video bg-slate-800 rounded-2xl mb-8 flex items-center justify-center text-white">
-                <p>Espai reservat per al vídeo</p>
-            </div>
+            {moduleData.videoUrl && (
+                <div className="aspect-video bg-slate-800 rounded-2xl mb-8 flex items-center justify-center text-white overflow-hidden">
+                    <video controls className="w-full h-full object-cover" key={moduleData.videoUrl}>
+                        <source src={moduleData.videoUrl} type="video/mp4" />
+                        El teu navegador no suporta l'element de vídeo.
+                    </video>
+                </div>
+            )}
             
             {renderActivity()}
         </section>

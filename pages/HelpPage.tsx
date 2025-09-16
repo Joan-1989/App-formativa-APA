@@ -19,7 +19,7 @@ const HelpPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Contact an expert card */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
-                     <img src="https://i.pravatar.cc/100?u=francesc" alt="Foto de Francesc Perendreu" className="w-24 h-24 rounded-full mb-4" />
+                     <img src="/assets/logo-apa.png" alt="Foto de Francesc Perendreu" className="w-24 h-24 rounded-full mb-4" />
                      <h3 className="text-xl font-bold text-slate-800">Parla amb un expert</h3>
                      <p className="text-slate-600 mt-2 mb-4 flex-grow">Sol·licita una visita online i confidencial amb el Sr. Francesc Perendreu, president d'ACENCAS Prevenció Activa.</p>
                      <a 
