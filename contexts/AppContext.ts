@@ -6,8 +6,9 @@ export interface AppContextType {
     modules: Modules;
     navigateTo: (page: string) => void;
     openModule: (moduleId: string) => void;
-    handleQuizFinish: (correctAnswers: number, totalQuestions: number, points: number) => void;
-    handleGenericActivityFinish: (points: number, title: string, message: string) => void;
+    startChallenge: (challengeId: string) => void;
+    handleQuizFinish: (correctAnswers: number, totalQuestions: number, points: number, redirectPage?: string) => void;
+    handleGenericActivityFinish: (points: number, title: string, message: string, redirectPage?: string) => void;
     updateUser: (updatedUser: User) => void;
     resetProgress: () => void;
 }

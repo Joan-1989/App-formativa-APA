@@ -19,7 +19,7 @@ const QuizModal = ({ content, onClose }: QuizModalProps) => {
                     onClick={onClose} 
                     className="w-full bg-sky-600 text-white font-semibold py-3 rounded-lg hover:bg-sky-700 transition-colors"
                 >
-                    Tornar als mòduls
+                    {content.buttonText || 'Tornar als mòduls'}
                 </button>
             </div>
         </div>

@@ -39,13 +39,21 @@ const ModuleViewPage = ({ moduleData }: ModuleViewPageProps) => {
     };
 
     return (
-        <section className="fade-in">
+        <section className="fade-in max-w-4xl mx-auto">
             <button onClick={() => appContext?.navigateTo('moduls')} className="flex items-center text-sm text-sky-600 font-semibold mb-6 hover:underline">
                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                  Tornar als mòduls
             </button>
             <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">{moduleData.title}</h2>
-            <p className="text-slate-500 mb-8">{moduleData.subtitle}</p>
+            <p className="text-slate-500 mb-6">{moduleData.subtitle}</p>
+
+            {moduleData.content && (
+                <div className="prose prose-slate max-w-none bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8 space-y-4">
+                    {moduleData.content.map((paragraph, index) => (
+                        <p key={index} className="text-slate-600">{paragraph}</p>
+                    ))}
+                </div>
+            )}
             
             <div className="aspect-video bg-slate-800 rounded-2xl mb-8 flex items-center justify-center text-white">
                 <p>Espai reservat per al vídeo</p>

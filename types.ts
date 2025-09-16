@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -18,6 +17,7 @@ export interface Question {
   q: string;
   options: string[];
   answer: number;
+  explanation?: string;
 }
 
 export interface QuizData {
@@ -52,6 +52,7 @@ export type ActivityData = QuizData | DragDropScenarioData | ReflectionJournalDa
 export interface ModuleData {
   title: string;
   subtitle: string;
+  content?: string[];
   activity: ActivityData | null;
   status: 'completed' | 'inprogress' | 'locked';
   progress: number;
@@ -63,7 +64,7 @@ export interface Modules {
 }
 
 export interface RankingUser {
-    id: string;
+    id:string;
     name: string;
     points: number;
 }
@@ -75,4 +76,5 @@ export interface ModalContent {
     icon: string;
     iconBgColor: string;
     iconTextColor: string;
+    buttonText?: string;
 }
