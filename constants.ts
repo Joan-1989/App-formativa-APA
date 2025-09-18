@@ -1,12 +1,5 @@
 import type { User, BadgeInfo, Modules, RankingUser, QuizData } from './types';
 
-export const CURRENT_USER: User = {
-    id: 'user1',
-    name: 'Àlex',
-    points: 1250,
-    badges: ['b01', 'b02'],
-};
-
 export const ALL_BADGES: BadgeInfo[] = [
     { id: 'b01', name: 'Iniciador Digital', desc: 'Completa el primer mòdul', icon: '🌱', color: 'teal' },
     { id: 'b02', name: 'Guardià del Temps', desc: 'Aprèn a gestionar el temps de pantalla', icon: '⏳', color: 'sky' },
@@ -14,14 +7,6 @@ export const ALL_BADGES: BadgeInfo[] = [
     { id: 'b04', name: 'Comunicador Conscient', desc: 'Domina la comunicació a les xarxes', icon: '💬', color: 'rose' },
     { id: 'b05', name: 'Expert en Privacitat', desc: 'Protegeix les teves dades personals', icon: '🛡️', color: 'amber' },
     { id: 'b06', name: 'Campió del Benestar', desc: 'Completa tota la formació', icon: '🏆', color: 'lime' },
-];
-
-export const RANKING_DATA: RankingUser[] = [
-    { id: 'user2', name: 'Laura G.', points: 2100 },
-    { id: 'user3', name: 'Carles P.', points: 1850 },
-    { id: 'user1', name: 'Àlex', points: 1250 },
-    { id: 'user4', name: 'Marta S.', points: 900 },
-    { id: 'user5', name: 'Joan R.', points: 550 },
 ];
 
 export const CHALLENGES_DATA = {
@@ -69,9 +54,8 @@ export const MODULES_DATA: Modules = {
                 { q: 'L\'ús excessiu del mòbil abans de dormir pot afectar negativament...', options: ['La gana', 'La qualitat del son', 'L\'equilibri'], answer: 1 },
             ],
         },
-        status: 'completed',
-        progress: 100,
-        points: 100
+        status: 'inprogress',
+        progress: 0,
     },
     'm01-02': {
         title: '2. Notificacions: amigues o enemigues?',
@@ -97,7 +81,7 @@ export const MODULES_DATA: Modules = {
             ],
         },
         status: 'inprogress',
-        progress: 50,
+        progress: 0,
     },
     'm01-03': {
         title: '3. Temps de pantalla conscient',

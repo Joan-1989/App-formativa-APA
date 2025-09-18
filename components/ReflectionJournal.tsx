@@ -17,7 +17,13 @@ const ReflectionJournal = ({ journalData }: ReflectionJournalProps) => {
             return;
         }
         setIsCompleted(true);
-        appContext?.handleGenericActivityFinish(journalData.points, 'Reflexió guardada!', 'Gràcies per compartir els teus pensaments.');
+        appContext?.handleGenericActivityFinish(
+            journalData.points, 
+            'Reflexió guardada!', 
+            'Gràcies per compartir els teus pensaments.',
+            'moduls',
+            { journalText: text }
+        );
     };
 
     return (

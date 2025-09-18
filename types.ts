@@ -1,8 +1,11 @@
+import { Timestamp } from 'firebase/firestore';
+
 export interface User {
   id: string;
   name: string;
   points: number;
   badges: string[];
+  createdAt: Timestamp;
 }
 
 export interface BadgeInfo {
@@ -58,6 +61,7 @@ export interface ModuleData {
   status: 'completed' | 'inprogress' | 'locked';
   progress: number;
   points?: number;
+  activityResponse?: any; // To store user's specific response, e.g., journal text
 }
 
 export interface Modules {

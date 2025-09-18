@@ -8,8 +8,8 @@ export interface AppContextType {
     openModule: (moduleId: string) => void;
     startChallenge: (challengeId: string) => void;
     handleQuizFinish: (correctAnswers: number, totalQuestions: number, points: number, redirectPage?: string) => void;
-    handleGenericActivityFinish: (points: number, title: string, message: string, redirectPage?: string) => void;
-    updateUser: (updatedUser: User) => void;
+    handleGenericActivityFinish: (points: number, title: string, message: string, redirectPage?: string, activityResponse?: any) => void;
+    updateUser: (updatedUser: Partial<User>) => void;
     resetProgress: () => void;
 }
 

@@ -1,24 +1,26 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../contexts/AppContext';
-import { ALL_BADGES, RANKING_DATA, MODULES_DATA } from '../constants';
+import { ALL_BADGES } from '../constants';
 import type { RankingUser } from '../types';
+import { getRankingList } from '../services/firestoreService';
 
 const ProgressPage = () => {
     const appContext = useContext(AppContext);
+    const [ranking, setRanking] = useState<RankingUser[]>([]);
     
     if (!appContext) return null;
-    const { user } = appContext;
+    const { user, modules } = appContext;
     
-    const sortedRanking = useMemo(() => {
-        const userInRanking = RANKING_DATA.find(u => u.id === user.id);
-        if(userInRanking) {
-            userInRanking.points = user.points;
-        }
-        return [...RANKING_DATA].sort((a, b) => b.points - a.points)
-    }, [user.points]);
+    useEffect(() => {
+        const fetchRanking = async () => {
+            const rankingList = await getRankingList();
+            setRanking(rankingList);
+        };
+        fetchRanking();
+    }, []);
 
-    const completedModules = Object.values(MODULES_DATA).filter(m => m.status === 'completed').length;
-    const totalModules = Object.values(MODULES_DATA).length;
+    const completedModulesCount = Object.values(modules).filter(m => m.status === 'completed').length;
+    const totalModulesCount = Object.values(modules).length;
 
     return (
         <section className="fade-in">
@@ -29,7 +31,7 @@ const ProgressPage = () => {
                     <p className="text-sm text-slate-500 mt-1">Punts totals</p>
                 </div>
                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
-                    <p className="text-3xl font-bold text-sky-600">{completedModules}/{totalModules}</p>
+                    <p className="text-3xl font-bold text-sky-600">{completedModulesCount}/{totalModulesCount}</p>
                     <p className="text-sm text-slate-500 mt-1">Mòduls completats</p>
                 </div>
                  <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
@@ -60,7 +62,7 @@ const ProgressPage = () => {
                      <h3 className="text-xl font-bold text-slate-700 mb-4">Rànquing</h3>
                      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                          <ul className="space-y-3">
-                            {sortedRanking.map((rankedUser: RankingUser, index: number) => {
+                            {ranking.map((rankedUser: RankingUser, index: number) => {
                                 const isCurrentUser = rankedUser.id === user.id;
                                 const rankIcon = ['🥇', '🥈', '🥉'][index] || `${index + 1}`;
                                 return (
@@ -72,7 +74,7 @@ const ProgressPage = () => {
                                 );
                             })}
                          </ul>
-                         <p className="text-xs text-slate-400 mt-4 text-center">Els noms d'usuari són anònims per defecte.</p>
+                         <p className="text-xs text-slate-400 mt-4 text-center">El rànquing es basa en els usuaris actius.</p>
                      </div>
                 </div>
             </div>

@@ -1,7 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onMessage } from 'firebase/messaging';
+import { auth, messaging } from './firebase';
 import { AppContext, AppContextType } from './contexts/AppContext';
-import { CURRENT_USER, MODULES_DATA } from './constants';
+import { MODULES_DATA } from './constants';
 import type { User, Modules, ModalContent } from './types';
+import { getUserData, createUserProfile, updateUserProfile, updateModuleProgress } from './services/firestoreService';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
@@ -19,15 +23,46 @@ import FakeNewsHunterPage from './pages/challenges/FakeNewsHunterPage';
 import WarningSignsInfographicPage from './pages/challenges/WarningSignsInfographicPage';
 import SemaphoreTechniquePage from './pages/challenges/SemaphoreTechniquePage';
 import AssertivenessSimulatorPage from './pages/challenges/AssertivenessSimulatorPage';
+import AuthPage from './pages/AuthPage';
+
 
 const App = () => {
+    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+    const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
     const [currentPage, setCurrentPage] = useState('inici');
     const [currentModuleId, setCurrentModuleId] = useState<string | null>(null);
     const [currentChallengeId, setCurrentChallengeId] = useState<string | null>(null);
-    const [user, setUser] = useState<User>(CURRENT_USER);
+    const [user, setUser] = useState<User | null>(null);
     const [modules, setModules] = useState<Modules>(MODULES_DATA);
     const [modalContent, setModalContent] = useState<ModalContent | null>(null);
     const [redirectAfterModal, setRedirectAfterModal] = useState('moduls');
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (userAuth) => {
+            if (userAuth) {
+                setFirebaseUser(userAuth);
+                let userData = await getUserData(userAuth.uid);
+                if (!userData) {
+                    userData = await createUserProfile(userAuth);
+                }
+                setUser(userData.profile as User);
+                setModules(userData.modules);
+            } else {
+                setFirebaseUser(null);
+                setUser(null);
+            }
+            setIsLoadingAuth(false);
+        });
+
+        // Handle foreground notifications
+        onMessage(messaging, (payload) => {
+            console.log('Message received. ', payload);
+            alert(`Notificació rebuda:\n${payload.notification?.title}\n${payload.notification?.body}`);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     const navigateTo = (page: string) => {
         setCurrentPage(page);
@@ -48,33 +83,33 @@ const App = () => {
         window.scrollTo(0, 0);
     };
     
-    const handleActivityCompletion = (moduleId: string, points: number) => {
-        setUser(prevUser => ({
-            ...prevUser,
-            points: prevUser.points + points,
-        }));
-        setModules(prevModules => {
-            const newModules = { ...prevModules };
-            if (newModules[moduleId]) {
-                newModules[moduleId] = {
-                    ...newModules[moduleId],
-                    status: 'completed',
-                    progress: 100,
-                    points: points,
-                };
-            }
-            return newModules;
-        });
+    const handleActivityCompletion = (moduleId: string, points: number, activityResponse?: any) => {
+        if (!user) return;
+        const newPoints = user.points + points;
+        
+        setUser(prevUser => prevUser ? ({ ...prevUser, points: newPoints }) : null);
+        updateUserProfile(user.id, { points: newPoints });
+
+        const updatedModule = {
+            ...modules[moduleId],
+            // Fix: Cast 'completed' to a literal type to prevent TypeScript from widening
+            // the 'status' property to 'string', ensuring it matches the 'ModuleData' type.
+            status: 'completed' as const,
+            progress: 100,
+            points: points,
+            activityResponse: activityResponse || null,
+        };
+        setModules(prevModules => ({ ...prevModules, [moduleId]: updatedModule }));
+        updateModuleProgress(user.id, moduleId, updatedModule);
     }
 
     const handleQuizFinish = (correctAnswers: number, totalQuestions: number, points: number, redirectPage: string = 'moduls') => {
         if (currentModuleId) {
-            handleActivityCompletion(currentModuleId, points);
-        } else {
-             setUser(prevUser => ({
-                ...prevUser,
-                points: prevUser.points + points,
-            }));
+            handleActivityCompletion(currentModuleId, points, { score: `${correctAnswers}/${totalQuestions}` });
+        } else if (user) {
+             const newPoints = user.points + points;
+             setUser(prevUser => prevUser ? ({ ...prevUser, points: newPoints }) : null);
+             updateUserProfile(user.id, { points: newPoints });
         }
         setRedirectAfterModal(redirectPage);
         setModalContent({
@@ -88,14 +123,13 @@ const App = () => {
         });
     };
     
-    const handleGenericActivityFinish = (points: number, title: string, message: string, redirectPage: string = 'moduls') => {
+    const handleGenericActivityFinish = (points: number, title: string, message: string, redirectPage: string = 'moduls', activityResponse?: any) => {
         if (currentModuleId) {
-            handleActivityCompletion(currentModuleId, points);
-        } else {
-             setUser(prevUser => ({
-                ...prevUser,
-                points: prevUser.points + points,
-            }));
+            handleActivityCompletion(currentModuleId, points, activityResponse);
+        } else if (user) {
+             const newPoints = user.points + points;
+             setUser(prevUser => prevUser ? ({ ...prevUser, points: newPoints }) : null);
+             updateUserProfile(user.id, { points: newPoints });
         }
         setRedirectAfterModal(redirectPage);
          setModalContent({
@@ -109,22 +143,18 @@ const App = () => {
         });
     };
 
-    const updateUser = (updatedUser: User) => {
-        setUser(updatedUser);
+    const updateUser = (updatedData: Partial<User>) => {
+        setUser(prevUser => prevUser ? { ...prevUser, ...updatedData } : null);
     };
 
     const resetProgress = () => {
-        setUser(currentUser => ({
-            ...currentUser,
-            points: 0,
-            badges: [],
-        }));
+        setUser(currentUser => currentUser ? ({ ...currentUser, points: 0, badges: [] }) : null);
         setModules(MODULES_DATA);
         navigateTo('inici');
     };
 
     const appContextValue: AppContextType = useMemo(() => ({
-        user,
+        user: user!,
         modules,
         navigateTo,
         openModule,
@@ -152,20 +182,13 @@ const App = () => {
             }
         }
         switch (currentPage) {
-            case 'inici':
-                return <HomePage />;
-            case 'moduls':
-                return <ModulesPage />;
-            case 'entrenat':
-                return <TrainPage />;
-            case 'progres':
-                return <ProgressPage />;
-            case 'perfil':
-                return <ProfilePage />;
-            case 'ajuda':
-                return <HelpPage />;
-            default:
-                return <HomePage />;
+            case 'inici': return <HomePage />;
+            case 'moduls': return <ModulesPage />;
+            case 'entrenat': return <TrainPage />;
+            case 'progres': return <ProgressPage />;
+            case 'perfil': return <ProfilePage />;
+            case 'ajuda': return <HelpPage />;
+            default: return <HomePage />;
         }
     };
     
@@ -173,6 +196,21 @@ const App = () => {
         setModalContent(null);
         navigateTo(redirectAfterModal);
     };
+
+    if (isLoadingAuth) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-slate-50">
+                <div className="text-center">
+                    <svg className="animate-spin h-8 w-8 text-sky-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <p className="mt-2 text-slate-500">Carregant...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!firebaseUser || !user) {
+        return <AuthPage />;
+    }
 
     return (
         <AppContext.Provider value={appContextValue}>
