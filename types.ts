@@ -68,6 +68,17 @@ export interface Modules {
   [key: string]: ModuleData;
 }
 
+export interface ChallengeProgress {
+    status: 'completed';
+    points: number;
+    activityResponse?: any;
+}
+
+export interface Challenges {
+    [key: string]: ChallengeProgress;
+}
+
+
 export interface RankingUser {
     id:string;
     name: string;

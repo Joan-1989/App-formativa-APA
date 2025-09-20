@@ -4,7 +4,28 @@ import { AppContext } from '../contexts/AppContext';
 const TrainPage = () => {
     const appContext = useContext(AppContext);
 
-    const challenges = [
+    const challengesList = [
+        {
+            id: 'g01',
+            title: "Trivial gamificat",
+            description: "Posa a prova els teus coneixements sobre benestar emocional i prevenció d'addiccions.",
+            icon: <svg className="h-8 w-8 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" /></svg>,
+            color: 'purple',
+        },
+        {
+            id: 'g02',
+            title: "Història interactiva",
+            description: "Pren decisions sobre l'ús del mòbil i el descans digital en una aventura narrativa.",
+            icon: <svg className="h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>,
+            color: 'green',
+        },
+        {
+            id: 'g03',
+            title: "Simulador de xat",
+            description: "Practica converses sobre hàbits digitals i gestió de l'estrès amb un coach virtual.",
+            icon: <svg className="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>,
+            color: 'blue',
+        },
         {
             id: 'c04',
             title: "Infogràfic: Senyals d'Alerta",
@@ -43,11 +64,14 @@ const TrainPage = () => {
         {
             id: 'c01',
             title: 'Repte: 24h sense notificacions',
-            description: 'Recupera el teu focus i redueix l\'ansietat digital desconnectant de les alertes constants.',
+            description: 'Recupera el teu focus i redueix l\'ansibilitat digital desconnectant de les alertes constants.',
             icon: <svg className="h-8 w-8 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>,
             color: 'orange',
         },
     ];
+
+    if (!appContext) return null;
+    const { startChallenge, challenges: userChallenges } = appContext;
 
     return (
         <section className="fade-in">
@@ -55,22 +79,41 @@ const TrainPage = () => {
             <p className="text-slate-500 mb-8">Posa a prova els teus coneixements amb aquests reptes i activitats pràctiques.</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {challenges.map(challenge => (
-                    <div 
-                        key={challenge.id}
-                        onClick={() => appContext?.startChallenge(challenge.id)}
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 group transition-shadow hover:shadow-md cursor-pointer"
-                    >
-                        <div className={`w-16 h-16 bg-${challenge.color}-100 rounded-xl flex items-center justify-center mb-4`}>
-                            {challenge.icon}
+                {challengesList.map(challenge => {
+                    const progress = userChallenges[challenge.id];
+                    const isCompleted = progress?.status === 'completed';
+                    
+                    return (
+                        <div 
+                            key={challenge.id}
+                            onClick={isCompleted ? undefined : () => startChallenge(challenge.id)}
+                            className={`bg-white p-6 rounded-2xl shadow-sm border border-slate-200 group transition-all duration-300 relative ${isCompleted ? 'opacity-70 bg-slate-50' : 'hover:shadow-md cursor-pointer'}`}
+                        >
+                            {isCompleted && (
+                                <div className="absolute top-4 right-4 bg-teal-500 text-white w-7 h-7 rounded-full flex items-center justify-center shadow">
+                                    <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                            )}
+                            <div className={`w-16 h-16 bg-${challenge.color}-100 rounded-xl flex items-center justify-center mb-4`}>
+                                {challenge.icon}
+                            </div>
+                            <h3 className="font-bold text-slate-800 text-lg">{challenge.title}</h3>
+                            <p className="text-sm text-slate-500 mt-2 h-20">{challenge.description}</p>
+                            
+                            {isCompleted ? (
+                                <span className="mt-4 inline-block text-sm font-semibold text-teal-600">
+                                    Completat (+{progress.points} punts)
+                                </span>
+                            ) : (
+                                <span className={`mt-4 inline-block text-sm font-semibold text-${challenge.color}-700 group-hover:underline`}>
+                                    Començar repte →
+                                </span>
+                            )}
                         </div>
-                        <h3 className="font-bold text-slate-800 text-lg">{challenge.title}</h3>
-                        <p className="text-sm text-slate-500 mt-2 h-20">{challenge.description}</p>
-                        <span className={`mt-4 inline-block text-sm font-semibold text-${challenge.color}-700 group-hover:underline`}>
-                            Començar repte →
-                        </span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </section>
     );

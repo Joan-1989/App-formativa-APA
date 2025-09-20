@@ -4,8 +4,8 @@ import { onMessage } from 'firebase/messaging';
 import { auth, messaging } from './firebase';
 import { AppContext, AppContextType } from './contexts/AppContext';
 import { MODULES_DATA } from './constants';
-import type { User, Modules, ModalContent } from './types';
-import { getUserData, createUserProfile, updateUserProfile, updateModuleProgress } from './services/firestoreService';
+import type { User, Modules, ModalContent, Challenges } from './types';
+import { getUserData, createUserProfile, updateUserProfile, updateModuleProgress, updateChallengeProgress } from './services/firestoreService';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
@@ -24,6 +24,9 @@ import WarningSignsInfographicPage from './pages/challenges/WarningSignsInfograp
 import SemaphoreTechniquePage from './pages/challenges/SemaphoreTechniquePage';
 import AssertivenessSimulatorPage from './pages/challenges/AssertivenessSimulatorPage';
 import AuthPage from './pages/AuthPage';
+import GamifiedTrivialPage from './pages/gamification/GamifiedTrivialPage';
+import InteractiveStoryPage from './pages/gamification/InteractiveStoryPage';
+import ChatSimulatorPage from './pages/gamification/ChatSimulatorPage';
 
 
 const App = () => {
@@ -35,6 +38,7 @@ const App = () => {
     const [currentChallengeId, setCurrentChallengeId] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [modules, setModules] = useState<Modules>(MODULES_DATA);
+    const [challenges, setChallenges] = useState<Challenges>({});
     const [modalContent, setModalContent] = useState<ModalContent | null>(null);
     const [redirectAfterModal, setRedirectAfterModal] = useState('moduls');
 
@@ -44,10 +48,12 @@ const App = () => {
                 setFirebaseUser(userAuth);
                 let userData = await getUserData(userAuth.uid);
                 if (!userData) {
-                    userData = await createUserProfile(userAuth);
+                    const createdData = await createUserProfile(userAuth);
+                    userData = { ...createdData, challenges: {} };
                 }
                 setUser(userData.profile as User);
                 setModules(userData.modules);
+                setChallenges(userData.challenges);
             } else {
                 setFirebaseUser(null);
                 setUser(null);
@@ -56,10 +62,12 @@ const App = () => {
         });
 
         // Handle foreground notifications
-        onMessage(messaging, (payload) => {
-            console.log('Message received. ', payload);
-            alert(`Notificació rebuda:\n${payload.notification?.title}\n${payload.notification?.body}`);
-        });
+        if (messaging) {
+            onMessage(messaging, (payload) => {
+                console.log('Message received. ', payload);
+                alert(`Notificació rebuda:\n${payload.notification?.title}\n${payload.notification?.body}`);
+            });
+        }
 
         return () => unsubscribe();
     }, []);
@@ -83,34 +91,79 @@ const App = () => {
         window.scrollTo(0, 0);
     };
     
-    const handleActivityCompletion = (moduleId: string, points: number, activityResponse?: any) => {
+    const handleCompletion = async (type: 'module' | 'challenge', id: string, points: number, activityResponse?: any) => {
         if (!user) return;
-        const newPoints = user.points + points;
-        
-        setUser(prevUser => prevUser ? ({ ...prevUser, points: newPoints }) : null);
-        updateUserProfile(user.id, { points: newPoints });
 
-        const updatedModule = {
-            ...modules[moduleId],
-            // Fix: Cast 'completed' to a literal type to prevent TypeScript from widening
-            // the 'status' property to 'string', ensuring it matches the 'ModuleData' type.
-            status: 'completed' as const,
-            progress: 100,
-            points: points,
-            activityResponse: activityResponse || null,
-        };
-        setModules(prevModules => ({ ...prevModules, [moduleId]: updatedModule }));
-        updateModuleProgress(user.id, moduleId, updatedModule);
-    }
+        const originalUserPoints = user.points;
+        const newPoints = originalUserPoints + points;
 
-    const handleQuizFinish = (correctAnswers: number, totalQuestions: number, points: number, redirectPage: string = 'moduls') => {
-        if (currentModuleId) {
-            handleActivityCompletion(currentModuleId, points, { score: `${correctAnswers}/${totalQuestions}` });
-        } else if (user) {
-             const newPoints = user.points + points;
-             setUser(prevUser => prevUser ? ({ ...prevUser, points: newPoints }) : null);
-             updateUserProfile(user.id, { points: newPoints });
+        // Prepare optimistic updates and persistence logic based on type
+        let optimisticStateUpdate: () => void;
+        let revertStateUpdate: () => void;
+        let saveProgress: () => Promise<void>;
+
+        if (type === 'module') {
+            const originalModuleState = modules[id];
+            const progressData = {
+                status: 'completed' as const, progress: 100, points,
+                activityResponse: activityResponse || null,
+            };
+            optimisticStateUpdate = () => setModules(prev => ({ ...prev, [id]: { ...prev[id], ...progressData } }));
+            revertStateUpdate = () => setModules(prev => ({ ...prev, [id]: originalModuleState }));
+            saveProgress = () => updateModuleProgress(user.id, id, progressData);
+        } else { // type === 'challenge'
+            const originalChallengeState = challenges[id] || null; // Use null if it doesn't exist
+            const progressData = {
+                status: 'completed' as const, points,
+                activityResponse: activityResponse || null,
+            };
+            optimisticStateUpdate = () => setChallenges(prev => ({ ...prev, [id]: progressData }));
+            revertStateUpdate = () => {
+                setChallenges(prev => {
+                    const newChallenges = { ...prev };
+                    if (originalChallengeState) {
+                        newChallenges[id] = originalChallengeState;
+                    } else {
+                        delete newChallenges[id];
+                    }
+                    return newChallenges;
+                });
+            };
+            saveProgress = () => updateChallengeProgress(user.id, id, progressData);
         }
+
+        // 1. Apply optimistic UI updates
+        setUser(prevUser => prevUser ? { ...prevUser, points: newPoints } : null);
+        optimisticStateUpdate();
+
+        try {
+            // 2. Persist changes to Firestore
+            await updateUserProfile(user.id, { points: newPoints });
+            await saveProgress();
+            console.log(`[SUCCESS] Progress saved for ${type} ${id}.`);
+        } catch (error) {
+            console.error(`Error saving ${type} progress to Firestore:`, error);
+            alert("S'ha produït un error en desar el progrés. Si us plau, intenta-ho de nou.");
+            
+            // 3. Revert optimistic updates on failure
+            setUser(prevUser => prevUser ? { ...prevUser, points: originalUserPoints } : null);
+            revertStateUpdate();
+        }
+    };
+
+    const handleQuizFinish = async (correctAnswers: number, totalQuestions: number, points: number, redirectPage: string = 'moduls') => {
+        const activityResponse = { score: `${correctAnswers}/${totalQuestions}` };
+        
+        if (currentModuleId) {
+            await handleCompletion('module', currentModuleId, points, activityResponse);
+        } else if (currentChallengeId && user) {
+            await handleCompletion('challenge', currentChallengeId, points, activityResponse);
+        } else if (user) { // Fallback for activities without specific ID
+             const newPoints = user.points + points;
+             setUser(prev => prev ? { ...prev, points: newPoints } : null);
+             await updateUserProfile(user.id, { points: newPoints });
+        }
+        
         setRedirectAfterModal(redirectPage);
         setModalContent({
             title: correctAnswers === totalQuestions ? 'Excel·lent!' : 'Bon esforç!',
@@ -123,16 +176,19 @@ const App = () => {
         });
     };
     
-    const handleGenericActivityFinish = (points: number, title: string, message: string, redirectPage: string = 'moduls', activityResponse?: any) => {
+    const handleGenericActivityFinish = async (points: number, title: string, message: string, redirectPage: string = 'moduls', activityResponse?: any) => {
         if (currentModuleId) {
-            handleActivityCompletion(currentModuleId, points, activityResponse);
-        } else if (user) {
-             const newPoints = user.points + points;
-             setUser(prevUser => prevUser ? ({ ...prevUser, points: newPoints }) : null);
-             updateUserProfile(user.id, { points: newPoints });
+            await handleCompletion('module', currentModuleId, points, activityResponse);
+        } else if (currentChallengeId && user) {
+            await handleCompletion('challenge', currentChallengeId, points, activityResponse);
+        } else if (user) { // Fallback
+            const newPoints = user.points + points;
+            setUser(prev => prev ? { ...prev, points: newPoints } : null);
+            await updateUserProfile(user.id, { points: newPoints });
         }
+        
         setRedirectAfterModal(redirectPage);
-         setModalContent({
+        setModalContent({
             title: title,
             scoreText: message,
             pointsText: `+${points} punts`,
@@ -150,12 +206,14 @@ const App = () => {
     const resetProgress = () => {
         setUser(currentUser => currentUser ? ({ ...currentUser, points: 0, badges: [] }) : null);
         setModules(MODULES_DATA);
+        setChallenges({});
         navigateTo('inici');
     };
 
     const appContextValue: AppContextType = useMemo(() => ({
         user: user!,
         modules,
+        challenges,
         navigateTo,
         openModule,
         startChallenge,
@@ -163,7 +221,7 @@ const App = () => {
         handleGenericActivityFinish,
         updateUser,
         resetProgress,
-    }), [user, modules]);
+    }), [user, modules, challenges]);
 
     const renderPage = () => {
         if (currentModuleId && currentPage === 'module-view') {
@@ -178,6 +236,9 @@ const App = () => {
                 case 'c04': return <WarningSignsInfographicPage />;
                 case 'c05': return <SemaphoreTechniquePage />;
                 case 'c06': return <AssertivenessSimulatorPage />;
+                case 'g01': return <GamifiedTrivialPage />;
+                case 'g02': return <InteractiveStoryPage />;
+                case 'g03': return <ChatSimulatorPage />;
                 default: return <TrainPage />;
             }
         }

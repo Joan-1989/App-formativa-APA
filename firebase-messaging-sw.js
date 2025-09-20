@@ -6,10 +6,10 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDcGWP_CjMNHE7T3fDIdtByjx7HRObhDPY",
+  apiKey: "__VITE_API_KEY_PLACEHOLDER__",
   authDomain: "app-formativa-apa.firebaseapp.com",
   projectId: "app-formativa-apa",
-  storageBucket: "app-formativa-apa.firebasestorage.app",
+  storageBucket: "app-formativa-apa.appspot.com",
   messagingSenderId: "765337791019",
   appId: "1:765337791019:web:2035652cfcdad827e7186e",
   measurementId: "G-T6SMKC08XF"

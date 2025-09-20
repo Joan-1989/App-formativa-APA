@@ -3,14 +3,14 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { getToken } from 'firebase/messaging';
 import { db, messaging } from '../firebase';
 import { MODULES_DATA } from '../constants';
-import type { User, Modules, RankingUser } from '../types';
+import type { User, Modules, RankingUser, Challenges, ChallengeProgress } from '../types';
 
 /**
- * Get user profile and modules progress from Firestore.
+ * Get user profile, modules progress, and challenges progress from Firestore.
  * @param uid The user's unique ID.
- * @returns User profile and modules data, or null if not found.
+ * @returns User profile, modules, and challenges data, or null if not found.
  */
-export const getUserData = async (uid: string): Promise<{ profile: User, modules: Modules } | null> => {
+export const getUserData = async (uid: string): Promise<{ profile: User, modules: Modules, challenges: Challenges } | null> => {
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
 
@@ -19,21 +19,26 @@ export const getUserData = async (uid: string): Promise<{ profile: User, modules
     }
 
     const profile = userSnap.data() as User;
+    
+    // Fetch modules progress
     const progressCollectionRef = collection(db, 'users', uid, 'progress');
     const progressSnap = await getDocs(progressCollectionRef);
-
     const modules: Modules = { ...MODULES_DATA };
-    if (progressSnap.empty) {
-        // If no progress, maybe initialize it here? For now, we return default modules
-    } else {
-        progressSnap.forEach(doc => {
-            if (modules[doc.id]) {
-                modules[doc.id] = { ...modules[doc.id], ...doc.data() };
-            }
-        });
-    }
+    progressSnap.forEach(doc => {
+        if (modules[doc.id]) {
+            modules[doc.id] = { ...modules[doc.id], ...doc.data() };
+        }
+    });
 
-    return { profile, modules };
+    // Fetch challenges progress
+    const challengeCollectionRef = collection(db, 'users', uid, 'challenges');
+    const challengeSnap = await getDocs(challengeCollectionRef);
+    const challenges: Challenges = {};
+    challengeSnap.forEach(doc => {
+        challenges[doc.id] = doc.data() as ChallengeProgress;
+    });
+
+    return { profile, modules, challenges };
 };
 
 /**
@@ -51,7 +56,6 @@ export const createUserProfile = async (firebaseUser: FirebaseUser): Promise<{ p
         createdAt: serverTimestamp() as any,
     };
     await setDoc(userRef, newUser);
-    // You could also initialize module progress here if needed
     return { profile: newUser, modules: MODULES_DATA };
 };
 
@@ -77,20 +81,38 @@ export const updateModuleProgress = async (uid: string, moduleId: string, data: 
 };
 
 /**
+ * Update a specific challenge's progress for a user.
+ * @param uid The user's unique ID.
+ * @param challengeId The ID of the challenge.
+ * @param data The progress data to update.
+ */
+export const updateChallengeProgress = async (uid: string, challengeId: string, data: any) => {
+    const challengeRef = doc(db, 'users', uid, 'challenges', challengeId);
+    await setDoc(challengeRef, data, { merge: true });
+};
+
+
+/**
  * Reset all progress for a user.
  * @param uid The user's unique ID.
  */
 export const resetUserProgress = async (uid: string) => {
+    const batch = writeBatch(db);
+
     // Reset user profile points and badges
-    await updateUserProfile(uid, { points: 0, badges: [] });
+    const userRef = doc(db, 'users', uid);
+    batch.update(userRef, { points: 0, badges: [] });
 
     // Delete all documents in the progress subcollection
     const progressCollectionRef = collection(db, 'users', uid, 'progress');
     const progressSnap = await getDocs(progressCollectionRef);
-    const batch = writeBatch(db);
-    progressSnap.forEach(doc => {
-        batch.delete(doc.ref);
-    });
+    progressSnap.forEach(doc => batch.delete(doc.ref));
+    
+    // Delete all documents in the challenges subcollection
+    const challengeCollectionRef = collection(db, 'users', uid, 'challenges');
+    const challengeSnap = await getDocs(challengeCollectionRef);
+    challengeSnap.forEach(doc => batch.delete(doc.ref));
+    
     await batch.commit();
 };
 

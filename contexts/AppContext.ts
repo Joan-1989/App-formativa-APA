@@ -1,9 +1,10 @@
 import { createContext } from 'react';
-import type { User, Modules } from '../types';
+import type { User, Modules, Challenges } from '../types';
 
 export interface AppContextType {
     user: User;
     modules: Modules;
+    challenges: Challenges;
     navigateTo: (page: string) => void;
     openModule: (moduleId: string) => void;
     startChallenge: (challengeId: string) => void;

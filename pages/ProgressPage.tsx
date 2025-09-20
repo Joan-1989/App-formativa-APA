@@ -3,6 +3,7 @@ import { AppContext } from '../contexts/AppContext';
 import { ALL_BADGES } from '../constants';
 import type { RankingUser } from '../types';
 import { getRankingList } from '../services/firestoreService';
+import Ranking from '../components/gamification/Ranking';
 
 const ProgressPage = () => {
     const appContext = useContext(AppContext);
@@ -60,22 +61,7 @@ const ProgressPage = () => {
                 </div>
                 <div>
                      <h3 className="text-xl font-bold text-slate-700 mb-4">Rànquing</h3>
-                     <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
-                         <ul className="space-y-3">
-                            {ranking.map((rankedUser: RankingUser, index: number) => {
-                                const isCurrentUser = rankedUser.id === user.id;
-                                const rankIcon = ['🥇', '🥈', '🥉'][index] || `${index + 1}`;
-                                return (
-                                    <li key={rankedUser.id} className={`flex items-center p-2 rounded-lg ${isCurrentUser ? 'bg-sky-100' : ''}`}>
-                                        <span className="font-bold w-8 text-center">{rankIcon}</span>
-                                        <span className="flex-1 font-medium text-slate-700">{isCurrentUser ? `${rankedUser.name} (Tu)` : rankedUser.name}</span>
-                                        <span className="font-bold text-sky-600">{rankedUser.points.toLocaleString('es-ES')} pts</span>
-                                    </li>
-                                );
-                            })}
-                         </ul>
-                         <p className="text-xs text-slate-400 mt-4 text-center">El rànquing es basa en els usuaris actius.</p>
-                     </div>
+                     <Ranking ranking={ranking} currentUserId={user.id} />
                 </div>
             </div>
         </section>
